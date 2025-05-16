@@ -1,6 +1,14 @@
-# ESP32 DHT11 Temperature Sensor
+# ESP32 DHT11 Temperature Sensor Project
 
-This project uses an ESP32 microcontroller and a DHT11 temperature/humidity sensor to read temperature data and output it to the serial monitor.
+This project utilizes an ESP32 microcontroller along with a DHT11 temperature and humidity sensor to read and display temperature and humidity data.
+
+## Project Structure
+
+- **src/**: Contains the main application code.
+- **include/**: Header files for the project.
+- **lib/**: Libraries used in the project.
+- **platformio.ini**: Configuration file for PlatformIO.
+- **README.md**: Documentation for the project.
 
 ## Hardware Requirements
 
@@ -10,6 +18,18 @@ This project uses an ESP32 microcontroller and a DHT11 temperature/humidity sens
 - Breadboard (optional)
 - USB cable for connecting ESP32 to computer
 
+## Software Requirements
+
+- PlatformIO IDE
+- DHT sensor library by Adafruit
+
+## Installation
+
+1. Install PlatformIO IDE.
+2. Clone this repository or download the project files.
+3. Open the project in PlatformIO.
+4. Install the required libraries specified in `platformio.ini`.
+
 ## Wiring
 
 Connect the DHT11 sensor to the ESP32 as follows:
@@ -18,36 +38,18 @@ Connect the DHT11 sensor to the ESP32 as follows:
 - DHT11 GND → ESP32 GND
 - DHT11 DATA → ESP32 GPIO pin 4 (can be changed in code)
 
-## Software Requirements
-
-- Arduino IDE
-- DHT sensor library by Adafruit
-
-## Installation
-
-1. Install the Arduino IDE
-2. Add ESP32 board support to Arduino IDE
-   - Go to File → Preferences
-   - Add `https://dl.espressif.com/dl/package_esp32_index.json` to Additional Boards Manager URLs
-   - Go to Tools → Board → Boards Manager and install "ESP32"
-3. Install required libraries:
-   - Go to Sketch → Include Library → Manage Libraries
-   - Search for and install "DHT sensor library" by Adafruit
-   - Also install "Adafruit Unified Sensor" library
-
 ## Usage
 
-1. Connect your ESP32 to your computer
-2. Select the correct board and port in Arduino IDE
-3. Upload the sketch
-4. Open the Serial Monitor at 115200 baud to see temperature readings
+1. Connect your ESP32 to your computer.
+2. Select the correct board and port in PlatformIO.
+3. Upload the code.
+4. Open the Serial Monitor to view temperature and humidity readings (115200 baud but platformio should detect automatically).
 
 ## Troubleshooting
 
-- If no readings appear, check your wiring connections
-- Ensure the DHT11 sensor is not damaged
-- Verify that the correct GPIO pin is specified in the code
+- If no readings appear, check your wiring connections.
+- Ensure the DHT11 sensor is functioning properly.
+- Verify that the correct GPIO pin is specified in the code.
 
-## Last Updated
-
-May 14, 2025
+## Setup on NixOS
+https://nixos.wiki/wiki/Platformio
