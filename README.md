@@ -38,6 +38,8 @@ Connect the DHT11 sensor to the ESP32 as follows:
 - DHT11 GND → ESP32 GND
 - DHT11 DATA → ESP32 GPIO pin 4 (can be changed in code)
 
+![alt text](image.png)
+
 ## Usage
 
 1. Connect your ESP32 to your computer.
