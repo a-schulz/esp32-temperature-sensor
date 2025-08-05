@@ -135,3 +135,4 @@ Es verfügt über einen integrierten 4M-Flash.Es verfügt über zwei Modi: WLAN 
 Ausgestattet mit einem 0,42-Zoll-OLED-Bildschirm und unterstützt USB-Download.
 
 
+https://steinlaus.de/esp32-c3-mit-0-42-inch-lcd-hello-world/
