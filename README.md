@@ -28,6 +28,19 @@ Connect the DHT11 sensor to the ESP32 as follows:
 
 ![alt text](image.png)
 
+```mermaid
+graph TD
+    VCC["3.3V (ESP)"] --> DS18B20_VCC["DS18B20 VCC"]
+    GND["GND (ESP)"] --> DS18B20_GND["DS18B20 GND"]
+    GPIO2["GPIO2 (ESP)"] --> DS18B20_DATA["DS18B20 DATA"]
+    DS18B20_DATA -->|4.7kΩ Pullup| VCC
+```
+    <!-- VCC --> DISPLAY_VCC["Display VCC"]
+    GND --> DISPLAY_GND["Display GND"]
+    SDA["GPIO4 (ESP C3)"] --> DISPLAY_SDA["Display SDA"]
+    SCL["GPIO5 (ESP C3)"] --> DISPLAY_SCL["Display SCL"] -->
+
+
 ## Software Requirements
 
 - PlatformIO (recommended) or Arduino IDE
@@ -103,3 +116,22 @@ This implementation publishes readings to two topics:
 ## Last Updated
 
 May 16, 2025
+
+
+Hardware:
+Übersicht
+Berichtpunkt
+Dieser Bildschirm unterscheidet sich von anderen 0,42-Zoll-Bildschirmen.Der Ausgangspunkt des Bildschirms lautet 12864 (13, 14)
+
+Bitte achten Sie vor dem Kauf darauf, andere 0,42-Zoll-Bildschirme dürfen nicht direkt ersetzen
+
+
+Produkteinführung
+
+Das SP32 C3 OLED-Entwicklungsboard basiert auf ESP32C3FN4/FH4, das Kernplatinen entworfen und hergestellt wird.
+
+Es verfügt über einen integrierten 4M-Flash.Es verfügt über zwei Modi: WLAN und Bluetooth, mit Keramikantenne,
+
+Ausgestattet mit einem 0,42-Zoll-OLED-Bildschirm und unterstützt USB-Download.
+
+
