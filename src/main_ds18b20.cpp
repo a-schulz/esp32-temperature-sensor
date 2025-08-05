@@ -14,7 +14,7 @@ DeviceAddress thermometer;
 
 void setup()
 {
-  Serial.begin(9600); // Initialize serial monitor
+  Serial.begin(115200); // Initialize serial monitor
   // Remove the pinMode line - OneWire library handles this
   
   // Start up the Dallas Temperature library
