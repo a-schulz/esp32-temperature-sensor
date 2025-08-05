@@ -86,14 +86,15 @@ void loop()
   
   // Clear display for new reading
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setFont(u8g2_font_logisoso18_tf); // Largest font that fits
   
   // Get device count
   int deviceCount = sensors.getDeviceCount();
   
   if (deviceCount == 0) {
+    u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawStr(0, 10, "No sensors!");
-    u8g2.drawStr(0, 20, "Check GPIO4");
+    u8g2.drawStr(0, 20, "Check GPIO8");
     u8g2.drawStr(0, 30, "4.7k pullup");
   } else {
     // Print temperature for each device found
@@ -108,41 +109,27 @@ void loop()
         Serial.print(tempC);
         Serial.println(" °C");
         
-        // Display on OLED
-        char sensorText[20];
-        sprintf(sensorText, "Sensor %d:", i);
-        u8g2.drawStr(0, 10, sensorText);
+        // Display temperature on OLED with large font
+        char tempText[10];
+        sprintf(tempText, "%.1f", tempC);
+        u8g2.drawStr(0, 25, tempText);
         
-        char tempText[20];
-        sprintf(tempText, "%.1f C", tempC);
-        u8g2.drawStr(0, 20, tempText);
-        
-        // Convert to Fahrenheit and display
-        float tempF = tempC * 9.0 / 5.0 + 32.0;
-        char tempFText[20];
-        sprintf(tempFText, "%.1f F", tempF);
-        u8g2.drawStr(0, 30, tempFText);
+        // Add °C with smaller font
+        u8g2.setFont(u8g2_font_6x10_tf);
+        u8g2.drawStr(45, 35, "C");
         
       } else {
         Serial.println(" error: Could not read temperature");
-        
-        char sensorText[20];
-        sprintf(sensorText, "Sensor %d:", i);
-        u8g2.drawStr(0, 10, sensorText);
+        u8g2.setFont(u8g2_font_6x10_tf);
         u8g2.drawStr(0, 20, "ERROR!");
         u8g2.drawStr(0, 30, "Check wire");
       }
     }
   }
   
-  // Add uptime
-  char uptimeText[20];
-  sprintf(uptimeText, "Up: %lus", millis() / 1000);
-  u8g2.drawStr(0, 40, uptimeText);
-  
   // Update display
   u8g2.sendBuffer();
   
   Serial.println("-----------------------------------");
-  delay(1000); // Wait x/1000 seconds between readings
+  delay(30000); // Wait x/1000 seconds between readings
 }
