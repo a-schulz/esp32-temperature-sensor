@@ -27,6 +27,16 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 unsigned long lastMsg = 0;
 
+// Forward declarations
+void setup_wifi();
+void reconnect();
+void publishTemperature(float temp);
+void publishStatus(String status, float temp);
+void sendDiscoveryConfig();
+void showTemperature(float temp);
+void showStatus(String message);
+void showError();
+
 void setup_wifi() {
   Serial.println("Connecting to WiFi");
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // Use credentials from header
