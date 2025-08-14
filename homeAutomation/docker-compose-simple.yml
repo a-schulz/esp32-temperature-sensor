@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=sensors
+      - POSTGRES_USER=sensor_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sensor123}
+      - TZ=${TZ:-Europe/Berlin}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  mqtt-to-db:
+    build: .
+    container_name: mqtt-to-db
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+      - postgres
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=sensors
+      - POSTGRES_USER=sensor_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sensor123}
+      - TZ=${TZ:-Europe/Berlin}
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - TZ=${TZ:-Europe/Berlin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/postgres.yml
+
+volumes:
+  grafana_data:

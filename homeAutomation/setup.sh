@@ -1,116 +1,139 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-echo "Setting up Heating System IoT Infrastructure..."
+# Load environment variables
+if [ -f .env ]; then
+  # Export all variables defined in .env, ignore comments
+  set -a
+  . ./.env
+  set +a
+else
+  echo "Error: .env file not found. Please copy .env.example to .env and configure your settings." >&2
+  exit 1
+fi
+
+# Choose docker compose command
+if command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE="docker-compose"
+else
+  COMPOSE="docker compose"
+fi
+
+echo "Setting up Heating System IoT Infrastructure with TimescaleDB..."
 
 # Create directory structure
-mkdir -p mosquitto/config mosquitto/data mosquitto/log
-mkdir -p homeassistant
-mkdir -p influxdb/data influxdb/config
-mkdir -p grafana/data grafana/provisioning
-mkdir -p node-red
+sudo mkdir -p mosquitto/config mosquitto/data mosquitto/log
+sudo mkdir -p homeassistant
+sudo mkdir -p timescaledb/data
+sudo mkdir -p grafana/data
+sudo mkdir -p node-red
 
-# Set proper permissions for mosquitto
-sudo chown -R root:root mosquitto/config
-sudo chown -R 1883:1883 mosquitto/data mosquitto/log
-sudo chown -R 472:472 grafana/
-sudo chown -R 1000:1000 node-red/
+# Align TimescaleDB data dir ownership to container postgres UID/GID (prevents permission denied on data files)
+echo "Aligning TimescaleDB data directory ownership..."
+PG_UID=$(docker run --rm timescale/timescaledb:latest-pg17 id -u postgres 2>/dev/null || echo "")
+PG_GID=$(docker run --rm timescale/timescaledb:latest-pg17 id -g postgres 2>/dev/null || echo "")
+if [ -n "${PG_UID}" ] && [ -n "${PG_GID}" ]; then
+  sudo chown -R "${PG_UID}:${PG_GID}" timescaledb/data || true
+else
+  echo "Warning: Could not determine postgres UID/GID from image; skipping chown." >&2
+fi
 
-# Create MQTT users with proper permissions
+# Set proper permissions (let the DB container manage its own data directory ownership)
+sudo chown -R root:root mosquitto/config || true
+sudo chown -R 1883:1883 mosquitto/data mosquitto/log || true
+sudo chown -R 472:472 grafana/ || true
+sudo chown -R 1000:1000 node-red/ || true
+# Do NOT chown timescaledb/ to a fixed UID to avoid mismatches with image UID
+
+# Create MQTT users with environment variables
 echo "Creating MQTT users..."
-sudo docker run --rm -v $(pwd)/mosquitto/config:/mosquitto/config eclipse-mosquitto:2.0 mosquitto_passwd -c -b /mosquitto/config/passwd heating_system secure_mqtt_password_2024
-sudo docker run --rm -v $(pwd)/mosquitto/config:/mosquitto/config eclipse-mosquitto:2.0 mosquitto_passwd -b /mosquitto/config/passwd admin admin_password_2024
+sudo docker run --rm -v "$(pwd)/mosquitto/config:/mosquitto/config" eclipse-mosquitto:2.0 \
+  mosquitto_passwd -c -b /mosquitto/config/passwd "${MQTT_USER}" "${MQTT_PASSWORD}"
+sudo docker run --rm -v "$(pwd)/mosquitto/config:/mosquitto/config" eclipse-mosquitto:2.0 \
+  mosquitto_passwd -b /mosquitto/config/passwd admin "${MQTT_ADMIN_PASSWORD}"
 
 # Fix ownership of password file
-sudo chown root:root mosquitto/config/passwd
-sudo chmod 644 mosquitto/config/passwd
-echo "MQTT users created successfully."
+sudo chown root:root mosquitto/config/passwd || true
+sudo chmod 644 mosquitto/config/passwd || true
 
-echo "Copy mosquitto configuration..."
-sudo cp mosquitto.conf mosquitto/config/mosquitto.conf
-sudo chown root:root mosquitto/config/mosquitto.conf
-sudo chmod 644 mosquitto/config/mosquitto.conf
-
-# Create ACL file with proper permissions
+# Create ACL file with environment variables
 sudo tee mosquitto/config/acl > /dev/null << EOF
 # Admin user
 user admin
 topic readwrite #
 
 # Heating system user
-user heating_system
+user ${MQTT_USER}
 topic readwrite heating/#
 topic readwrite homeassistant/#
 EOF
 
-sudo chown root:root mosquitto/config/acl
-sudo chmod 644 mosquitto/config/acl
+sudo chown root:root mosquitto/config/acl || true
+sudo chmod 644 mosquitto/config/acl || true
 
-# Create Home Assistant configuration
-cat > homeassistant/configuration.yaml << EOF
-# Loads default set of integrations
-default_config:
+# Generate Home Assistant configuration from template
+echo "Generating Home Assistant configuration..."
+if command -v envsubst >/dev/null 2>&1; then
+  envsubst < homeassistant/configuration.yaml.template > homeassistant/configuration.yaml
+else
+  echo "Warning: envsubst not found. Copying template without substitution." >&2
+  cp homeassistant/configuration.yaml.template homeassistant/configuration.yaml
+fi
 
-# MQTT Configuration
-mqtt:
-  broker: mosquitto
-  port: 1883
-  username: heating_system
-  password: secure_mqtt_password_2024
-  discovery: true
+# Create empty automation files if they don't exist
+: > homeassistant/automations.yaml
+: > homeassistant/scripts.yaml
+: > homeassistant/scenes.yaml
 
-# InfluxDB Integration
-influxdb:
-  host: influxdb
-  port: 8086
-  token: super_secret_admin_token_2024
-  organization: heating_system
-  bucket: temperature_data
-  measurement_attr: entity_id
-  default_measurement: units
-  exclude:
-    domains:
-      - automation
-      - script
+echo "Starting services with docker compose..."
+$COMPOSE up -d
 
-# Recorder (for local database)
-recorder:
-  purge_keep_days: 30
-  
-# History
-history:
-  include:
-    entities:
-      - sensor.boiler_room_temperature
-      - sensor.living_room_temperature
-      - switch.heating_pump
+echo "Waiting for services to become healthy..."
+# Wait up to 180s for DB readiness
+DB_READY_TIMEOUT=180
+DB_READY_START=$(date +%s)
+while true; do
+  if docker exec timescaledb pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" >/dev/null 2>&1; then
+    break
+  fi
+  NOW=$(date +%s)
+  if [ $((NOW - DB_READY_START)) -ge ${DB_READY_TIMEOUT} ]; then
+    echo "Warning: TimescaleDB not ready after ${DB_READY_TIMEOUT}s; continuing." >&2
+    break
+  fi
+  sleep 3
+done
 
-# Frontend
-frontend:
-  themes: !include_dir_merge_named themes
-
-# Mobile App
-mobile_app:
-
-# System Health
-system_health:
-EOF
-
-echo "Setup complete! Starting services..."
-docker compose up -d
-
-echo "Waiting for services to start..."
-sleep 30
+# Also give HA some time to create tables
+sleep 20
 
 echo "Service status:"
-docker compose ps
+$COMPOSE ps
 
 echo ""
-echo "Access URLs:"
-echo "Home Assistant: http://$(hostname | awk '{print $1}'):8123"
-echo "Grafana: http://$(hostname | awk '{print $1}'):3000 (admin/admin_password_2024)"
-echo "Node-RED: http://$(hostname | awk '{print $1}'):1880"
-echo "InfluxDB: http://$(hostname | awk '{print $1}'):8086"
+echo "Initializing TimescaleDB hypertables..."
+# Attempt to create hypertables and views (safe to run multiple times)
+docker exec timescaledb psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "SELECT create_ha_hypertables();" \
+  || echo "Note: Hypertables will be created after Home Assistant starts and creates tables"
+
+IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+[ -z "$IP" ] && IP=$(hostname)
+
 echo ""
-echo "MQTT Broker: $(hostname | awk '{print $1}'):1883"
-echo "MQTT User: heating_system"
-echo "MQTT Password: secure_mqtt_password_2024"
+echo "Setup complete!"
+echo ""
+echo "Access URLs:"
+echo "Home Assistant: http://$IP:8123"
+echo "Grafana: http://$IP:3000 (admin/${GRAFANA_ADMIN_PASSWORD})"
+echo "Node-RED: http://$IP:1880"
+echo ""
+echo "Database Info:"
+echo "TimescaleDB: $IP:5432"
+echo "Database: ${POSTGRES_DB}"
+echo "User: ${POSTGRES_USER}"
+echo ""
+echo "MQTT Broker: $IP:1883"
+echo "MQTT User: ${MQTT_USER}"
+echo ""
+echo "To create hypertables manually after Home Assistant has started:"
+echo "docker exec timescaledb psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c \"SELECT create_ha_hypertables();\""

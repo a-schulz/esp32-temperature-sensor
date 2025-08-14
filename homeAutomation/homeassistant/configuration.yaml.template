@@ -1,0 +1,87 @@
+# Home Assistant configuration template
+# This file should be customized with your environment-specific values
+
+# Loads default set of integrations
+default_config:
+
+# Database configuration with TimescaleDB
+recorder:
+  db_url: !env_var POSTGRES_URL postgresql://homeassistant:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB}
+  purge_keep_days: 365
+  auto_purge: true
+  commit_interval: 5
+  exclude:
+    domains:
+      - automation
+      - script
+      - scene
+      - group
+    entity_globs:
+      - sensor.*_battery
+      - sensor.*_signal_strength
+  include:
+    domains:
+      - sensor
+      - switch
+      - climate
+      - weather
+    entity_globs:
+      - sensor.*temperature*
+      - sensor.*humidity*
+      - sensor.*energy*
+      - sensor.*power*
+      - switch.heating_*
+
+# MQTT Configuration
+mqtt:
+  broker: mosquitto
+  port: 1883
+  username: !env_var MQTT_USER
+  password: !env_var MQTT_PASSWORD
+  discovery: true
+  discovery_prefix: homeassistant
+
+# History
+history:
+  include:
+    entities:
+      - sensor.boiler_room_temperature
+      - sensor.living_room_temperature
+      - switch.heating_pump
+      - sensor.solar_power_production
+      - sensor.heating_power_consumption
+
+# Frontend
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Mobile App
+mobile_app:
+
+# System Health
+system_health:
+
+# Energy dashboard
+energy:
+
+# Template sensors for calculations
+template:
+  - sensor:
+      - name: "Heating Efficiency"
+        unit_of_measurement: "°C/kW"
+        state: >
+          {% if states('sensor.heating_power_consumption')|float > 0 %}
+            {{ (states('sensor.boiler_room_temperature')|float / states('sensor.heating_power_consumption')|float) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+      
+      - name: "Energy Balance"
+        unit_of_measurement: "kW"
+        state: >
+          {{ (states('sensor.solar_power_production')|float - states('sensor.heating_power_consumption')|float) | round(2) }}
+
+# Automations
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml

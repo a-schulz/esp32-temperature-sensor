@@ -328,4 +328,14 @@ lib_deps =
 - **Manual override controls**
 
 Would you like me to provide specific configuration files for Home Assistant or help you set up any particular component first?
+```
 
+
+TimescaleDB vs Influx when using HomeAssistant
+https://community.home-assistant.io/t/long-time-state-storage-on-timescaledb-vs-influxdb/452964
+
+
+For what do i even need this complex setup?
+SImplyfy the setup!
+In Timescale why is there a a new table created when currently there isn't even clear which service is inserting into the databsae? The esp is currently only inputting into the mqtt broker and from there i dont know if the data is used anywhere.
+I want a simple and maintainable setup including the glue to connect all the services in a efficient manner
