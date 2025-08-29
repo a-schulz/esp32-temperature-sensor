@@ -14,6 +14,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/temperature-sensor/' : '/',
   plugins: [
     VueRouter({
       dts: 'src/typed-router.d.ts',
@@ -95,4 +96,15 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vuetify'],
+          charts: ['chart.js', 'vue-chartjs'],
+          utils: ['@vueuse/core', '@supabase/supabase-js']
+        }
+      }
+    }
+  }
 })
