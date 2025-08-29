@@ -65,13 +65,25 @@
 
     <!-- Current Values Section -->
     <v-row v-if="!loading && processedData.length > 0">
-      <v-col cols="12" class="mb-4">
-        <div class="text-h4 mb-6">
-          <v-icon class="mr-3" color="primary">mdi-home-thermometer</v-icon>
-          Aktuelle Werte
-        </div>
+      <v-col cols="12">
+        <v-row>
+          <v-col cols="10">
+            <div class="text-h4">
+              <v-icon class="mr-3" color="primary">mdi-home-thermometer</v-icon>
+              Aktuelle Werte
+            </div>
+          </v-col>
+          <v-col cols="2">
+            <v-btn
+              location="bottom end"
+              variant="tonal"
+              icon="mdi-refresh"
+              @click="fetchSensorData"
+              :loading="loading"
+            />
+          </v-col>
+        </v-row>
       </v-col>
-
       <v-col
         v-for="location in processedData"
         :key="location.location"
@@ -81,11 +93,10 @@
       >
         <v-card
           class="sensor-card"
-          :class="{ 'elevation-8': true }"
-          height="280"
         >
           <v-card-title class="text-h5 pb-2">
-            <v-icon class="mr-2" color="primary">mdi-map-marker</v-icon>
+            <!-- was: <v-icon class="mr-2" color="primary">mdi-map-marker</v-icon> -->
+            <v-icon class="mr-2" color="primary">{{ getLocationIcon(location.displayName) }}</v-icon>
             {{ location.displayName }}
           </v-card-title>
 
@@ -105,9 +116,9 @@
                   {{ location.temperature.status === 'online' ? 'Online' : 'Offline' }}
                 </v-chip>
               </div>
-              
+
               <div class="d-flex align-center">
-                <div 
+                <div
                   class="temperature-value mr-3"
                   :style="{ color: getTemperatureRange(location.temperature.current).color }"
                 >
@@ -117,12 +128,11 @@
                   :color="getTemperatureRange(location.temperature.current).color"
                   :style="{ backgroundColor: getTemperatureRange(location.temperature.current).bgColor }"
                   size="large"
-                  variant="flat"
                 >
                   {{ getTemperatureRange(location.temperature.current).label }}
                 </v-chip>
               </div>
-              
+
               <div class="text-caption mt-1 text-medium-emphasis">
                 {{ formatRelativeTime(location.temperature.lastUpdated) }}
               </div>
@@ -143,11 +153,11 @@
                   {{ location.humidity.status === 'online' ? 'Online' : 'Offline' }}
                 </v-chip>
               </div>
-              
+
               <div class="humidity-value" style="color: #388E3C;">
                 {{ location.humidity.current.toFixed(0) }}%
               </div>
-              
+
               <div class="text-caption mt-1 text-medium-emphasis">
                 {{ formatRelativeTime(location.humidity.lastUpdated) }}
               </div>
@@ -170,9 +180,12 @@
       <v-col cols="12" class="mb-4">
         <div class="text-h4 mb-6">
           <v-icon class="mr-3" color="primary">mdi-chart-line</v-icon>
-          Verlauf der letzten 24 Stunden
+          Verlauf der letzten
+          <span v-if="selectedTimeRange === '24'">24 Stunden</span>
+          <span v-else-if="selectedTimeRange === '168'">7 Tage</span>
+          <span v-else-if="selectedTimeRange === '720'">30 Tage</span>
         </div>
-        
+
         <!-- Time Range Selection -->
         <v-btn-toggle
           v-model="selectedTimeRange"
@@ -205,20 +218,20 @@
             <v-icon class="mr-2" color="primary">mdi-thermometer</v-icon>
             {{ location.displayName }}
           </v-card-title>
-          
+
           <v-card-text>
             <div v-if="chartLoading" class="text-center py-8">
-              <v-progress-circular indeterminate color="primary" />
+              <v-progress-circular indeterminate color="primary"/>
               <div class="text-body-1 mt-2">Daten werden geladen...</div>
             </div>
-            
+
             <SensorChart
               v-else-if="chartData[location.location]?.temperature && chartData[location.location].temperature!.length > 0"
               :data="chartData[location.location].temperature!"
               type="temperature"
               :height="300"
             />
-            
+
             <div v-else class="text-center py-8">
               <v-icon size="48" color="grey">mdi-chart-line-variant</v-icon>
               <div class="text-body-1 mt-2 text-medium-emphasis">
@@ -241,20 +254,20 @@
             <v-icon class="mr-2" color="success">mdi-water-percent</v-icon>
             {{ location.displayName }}
           </v-card-title>
-          
+
           <v-card-text>
             <div v-if="chartLoading" class="text-center py-8">
-              <v-progress-circular indeterminate color="success" />
+              <v-progress-circular indeterminate color="success"/>
               <div class="text-body-1 mt-2">Daten werden geladen...</div>
             </div>
-            
+
             <SensorChart
               v-else-if="chartData[location.location]?.humidity && chartData[location.location].humidity!.length > 0"
               :data="chartData[location.location].humidity!"
               type="humidity"
               :height="300"
             />
-            
+
             <div v-else class="text-center py-8">
               <v-icon size="48" color="grey">mdi-chart-line-variant</v-icon>
               <div class="text-body-1 mt-2 text-medium-emphasis">
@@ -285,25 +298,14 @@
         </v-btn>
       </v-col>
     </v-row>
-
-    <!-- Refresh Button (Always Visible) -->
-    <v-fab
-      location="bottom end"
-      size="large"
-      color="primary"
-      icon="mdi-refresh"
-      @click="handleRefresh"
-      :loading="loading"
-      class="ma-4"
-    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { useSensorData } from '@/composables/useSensorData'
+import {ref, computed, watch, onMounted} from 'vue'
+import {useSensorData} from '@/composables/useSensorData'
 import SensorChart from '@/components/SensorChart.vue'
-import type { EnvironmentMeasurement } from '@/types/sensor'
+import type {EnvironmentMeasurement} from '@/types/sensor'
 
 // Use the sensor data composable
 const {
@@ -317,38 +319,68 @@ const {
   formatRelativeTime
 } = useSensorData()
 
+// Pick an icon by searching for relevant keywords in the location name.
+// Avoids a static map and tries to find the best match.
+const getLocationIcon = (name: string): string => {
+  const n = (name || '').toLowerCase().trim()
+
+  if (/(living|wohn|lounge|stube)/.test(n)) return 'mdi-sofa'
+  if (/(sleep|bed|schlaf)/.test(n)) return 'mdi-bed-queen'
+  if (/(kitchen|küche|kueche|cook)/.test(n)) return 'mdi-silverware-fork-knife'
+  if (/(office|büro|buero|study|arbeits)/.test(n)) return 'mdi-desk'
+  if (/(basement|keller|cellar)/.test(n)) return 'mdi-stairs-down'
+  if (/(attic|dachboden)/.test(n)) return 'mdi-home-roof'
+  if (/garage/.test(n)) return 'mdi-garage'
+  if (/\b(bath|bad|bathroom|wc|toilet)\b/.test(n)) return 'mdi-shower'
+  if (/(garden|garten|yard|outdoor|terrasse|terrace|patio)/.test(n)) return 'mdi-tree'
+  if (/(balcony|balkon)/.test(n)) return 'mdi-flower'
+  if (/(server|rack)/.test(n)) return 'mdi-server'
+  if (/(nursery|kinder|kids|child)/.test(n)) return 'mdi-baby-face-outline'
+  if (/(hall|flur|corridor|gang)/.test(n)) return 'mdi-door-open'
+  if (/(dining|essen|speise)/.test(n)) return 'mdi-silverware'
+  if (/(storage|abstell|speicher)/.test(n)) return 'mdi-archive-outline'
+  if (/(heating|heizung|boiler)/.test(n)) return 'mdi-heating-coil'
+
+  // As a generic indoor space, prefer a home icon; otherwise fall back to marker
+  if (/(room|zimmer|home|haus)/.test(n)) return 'mdi-home-outline'
+  return 'mdi-map-marker'
+}
+
 // Chart data state
-const chartData = ref<Record<string, { temperature?: EnvironmentMeasurement[], humidity?: EnvironmentMeasurement[] }>>({})
+const chartData = ref<Record<string, {
+  temperature?: EnvironmentMeasurement[],
+  humidity?: EnvironmentMeasurement[]
+}>>({})
 const chartLoading = ref(false)
 const selectedTimeRange = ref('24') // 24 hours default
 
 // Load chart data for all locations
 const loadChartData = async () => {
   if (processedData.value.length === 0) return
-  
+
   chartLoading.value = true
   const newChartData: typeof chartData.value = {}
-  
+
   try {
     const hours = parseInt(selectedTimeRange.value)
-    
+
     // Load data for each location
     for (const location of processedData.value) {
       newChartData[location.location] = {}
-      
+
       // Load temperature data if available
       if (location.temperature) {
         const tempData = await getHistoricalData(location.location, 'temperature', hours)
         newChartData[location.location].temperature = tempData
       }
-      
+
       // Load humidity data if available
       if (location.humidity) {
         const humidityData = await getHistoricalData(location.location, 'humidity', hours)
         newChartData[location.location].humidity = humidityData
       }
     }
-    
+
     chartData.value = newChartData
   } catch (err) {
     console.error('Error loading chart data:', err)
@@ -366,7 +398,7 @@ const handleRefresh = async () => {
 // Watch for changes in processed data and time range
 watch([processedData, selectedTimeRange], () => {
   loadChartData()
-}, { deep: true })
+}, {deep: true})
 
 // Watch for time range changes
 watch(selectedTimeRange, () => {
@@ -390,7 +422,7 @@ onMounted(() => {
 
 .sensor-card {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
@@ -420,11 +452,11 @@ onMounted(() => {
   .temperature-value {
     font-size: 2.5rem !important;
   }
-  
+
   .humidity-value {
     font-size: 2rem !important;
   }
-  
+
   .sensor-card {
     margin: 8px 0;
   }
@@ -433,7 +465,7 @@ onMounted(() => {
 @media (max-width: 600px) {
   .v-btn-toggle {
     width: 100%;
-    
+
     .v-btn {
       flex: 1;
       min-width: auto;
