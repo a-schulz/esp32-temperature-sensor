@@ -210,6 +210,10 @@ The OLED display starting point is at coordinates (13, 14) and differs from stan
 
 August 5, 2025
 
+
+
+Also added frontend to view iot data
+
 ## References
 
 - [ESP32-C3 OLED Board Tutorial](https://steinlaus.de/esp32-c3-mit-0-42-inch-lcd-hello-world/)
