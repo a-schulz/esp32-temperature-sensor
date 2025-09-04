@@ -11,7 +11,8 @@
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --fix",
     "deploy": "npm run build && gh-pages -d dist",
-    "build:gh-pages": "NODE_ENV=production npm run build"
+    "build:gh-pages": "NODE_ENV=production npm run build",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "@fontsource/roboto": "5.2.6",
@@ -40,10 +41,12 @@
     "unplugin-vue-components": "^28.8.0",
     "unplugin-vue-router": "^0.14.0",
     "vite": "^6.3.5",
+    "vite-plugin-pwa": "^1.0.3",
     "vite-plugin-vue-layouts-next": "^1.0.0",
     "vite-plugin-vuetify": "^2.1.1",
     "vue-router": "^4.5.1",
-    "vue-tsc": "^3.0.1"
+    "vue-tsc": "^3.0.1",
+    "workbox-window": "^7.3.0"
   },
   "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
 }
