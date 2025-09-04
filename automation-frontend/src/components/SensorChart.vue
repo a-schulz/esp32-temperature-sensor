@@ -81,11 +81,11 @@ const chartData = computed<ChartData<'line'>>(() => {
         borderColor: color,
         backgroundColor: bgColor,
         borderWidth: 3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: values.length > 50 ? 1 : 2,
+        pointHoverRadius: values.length > 50 ? 4 : 6,
         pointBackgroundColor: color,
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
+        pointBorderColor: '#ffffff',  
+        pointBorderWidth: 0,
         fill: true,
         tension: 0.3
       }
