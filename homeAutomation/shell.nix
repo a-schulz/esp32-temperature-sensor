@@ -16,5 +16,6 @@ in
       pkgs.cmakeMinimal
       pkgs.postgresql
       pkgs.envsubst
+      pkgs.pnpm
     ];
 }
