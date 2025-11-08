@@ -274,3 +274,7 @@ For technical issues or feature requests, please create an issue in the reposito
 **Status**: ✅ Phase 1 Complete - Production Ready
 **Deployment**: 🚀 GitHub Pages with CI/CD
 **Accessibility**: ♿ WCAG 2.1 AA Compliant
+
+
+## Notes on Typescript:
+- Supabase can generate types see: https://supabase.com/docs/guides/api/rest/generating-types

@@ -1,11 +1,3 @@
-export interface EnvironmentMeasurement {
-  id: string
-  created_at: string
-  location: string
-  type: 'temperature' | 'humidity'
-  value: number
-}
-
 export interface LocationData {
   location: string
   displayName: string

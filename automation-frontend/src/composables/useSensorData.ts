@@ -1,8 +1,7 @@
+import type { Tables } from '@/types/database.types.ts'
 import type {
-  EnvironmentMeasurement,
   LocationData,
   SensorAlert,
-  TemperatureRange,
   TemperatureRangeConfig,
 } from '@/types/sensor'
 import { computed, onMounted, onUnmounted, readonly, ref } from 'vue'
@@ -10,7 +9,7 @@ import { supabase } from '@/utils/supabase'
 
 export function useSensorData () {
   // Reactive state
-  const measurements = ref<EnvironmentMeasurement[]>([])
+  const measurements = ref <Tables<'environment_measurements'>[]>([])
   const loading = ref(true)
   const error = ref<string | null>(null)
   const lastUpdate = ref<Date | null>(null)
@@ -69,8 +68,8 @@ export function useSensorData () {
   }
 
   /**
-     * Get temperature range for a given temperature value
-     */
+   * Get temperature range for a given temperature value
+   */
   const getTemperatureRange = (
     temperature: number,
   ): TemperatureRangeConfig => {
@@ -82,8 +81,8 @@ export function useSensorData () {
   }
 
   /**
-     * Format relative time in German
-     */
+   * Format relative time in German
+   */
   const formatRelativeTime = (dateString: string): string => {
     const now = new Date()
     const then = new Date(dateString)
@@ -106,8 +105,8 @@ export function useSensorData () {
   }
 
   /**
-     * Check if sensor data is considered offline (>5 minutes old)
-     */
+   * Check if sensor data is considered offline (>5 minutes old)
+   */
   const isOffline = (dateString: string): boolean => {
     const SENSOR_SUBMIT_INTERVAL = 15
     const OFFLINE_THRESHOLD = SENSOR_SUBMIT_INTERVAL + 1 // minutes
@@ -118,8 +117,8 @@ export function useSensorData () {
   }
 
   /**
-     * Process raw measurements into location-based data structure
-     */
+   * Process raw measurements into location-based data structure
+   */
   const processedData = computed<LocationData[]>(() => {
     const locationMap = new Map<string, LocationData>()
 
@@ -129,8 +128,8 @@ export function useSensorData () {
         locationMap.set(measurement.location, {
           location: measurement.location,
           displayName:
-                        locationDisplayNames[measurement.location]
-                        || measurement.location,
+            locationDisplayNames[measurement.location]
+            || measurement.location,
         })
       }
 
@@ -158,8 +157,8 @@ export function useSensorData () {
   })
 
   /**
-     * Generate alerts based on current sensor data
-     */
+   * Generate alerts based on current sensor data
+   */
   const alerts = computed<SensorAlert[]>(() => {
     const alertList: SensorAlert[] = []
 
@@ -212,8 +211,8 @@ export function useSensorData () {
   })
 
   /**
-     * Fetch latest sensor data from Supabase
-     */
+   * Fetch latest sensor data from Supabase
+   */
   const fetchSensorData = async (): Promise<void> => {
     try {
       if (measurements.value.length <= 0) {
@@ -222,32 +221,16 @@ export function useSensorData () {
       error.value = null
 
       // Get latest measurement for each location/type combination
-      const { data: latestData, error: fetchError } = await supabase
-        .from('environment_measurements')
-        .select('*')
-        .in('location', ['garage', 'heating'])
-        .order('created_at', { ascending: false })
+      const {
+        data: latestData,
+        error: fetchError,
+      } = await supabase.rpc('latest_measurements').in('location', Object.keys(locationDisplayNames))
 
       if (fetchError) {
         throw fetchError
       }
 
-      // Keep only the latest measurement for each location/type combination
-      const uniqueMeasurements = new Map<
-        string,
-        EnvironmentMeasurement
-      >()
-
-      if (latestData) {
-        for (const measurement of latestData) {
-          const key = `${measurement.location}-${measurement.type}`
-          if (!uniqueMeasurements.has(key)) {
-            uniqueMeasurements.set(key, measurement)
-          }
-        }
-      }
-
-      measurements.value = Array.from(uniqueMeasurements.values())
+      measurements.value = latestData
       lastUpdate.value = new Date()
     } catch (error_) {
       console.error('Error fetching sensor data:', error_)
@@ -258,8 +241,8 @@ export function useSensorData () {
   }
 
   /**
-     * Get historical data for charts
-     */
+   * Get historical data for charts
+   */
   const getHistoricalData = async (
     location: string,
     type: 'temperature' | 'humidity',
@@ -289,8 +272,8 @@ export function useSensorData () {
   }
 
   /**
-     * Start auto-refresh interval
-     */
+   * Start auto-refresh interval
+   */
   const startAutoRefresh = (): void => {
     if (refreshInterval) {
       clearInterval(refreshInterval)
@@ -302,8 +285,8 @@ export function useSensorData () {
   }
 
   /**
-     * Stop auto-refresh interval
-     */
+   * Stop auto-refresh interval
+   */
   const stopAutoRefresh = (): void => {
     if (refreshInterval) {
       clearInterval(refreshInterval)
