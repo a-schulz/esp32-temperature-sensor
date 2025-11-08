@@ -43,7 +43,6 @@
 
   const theme = useTheme()
   const darkMode = useStorage('darkMode', false)
-  const lastUpdate = ref<Date>(new Date())
   const isOnline = ref(navigator.onLine)
 
   // Connection status
