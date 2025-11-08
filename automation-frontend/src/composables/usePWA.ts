@@ -1,5 +1,5 @@
-import { ref, computed, type Ref } from 'vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
+import { computed, ref, type Ref } from 'vue'
 
 // Define types for PWA functionality
 interface BeforeInstallPromptEvent extends Event {
@@ -8,47 +8,48 @@ interface BeforeInstallPromptEvent extends Event {
     outcome: 'accepted' | 'dismissed'
     platform: string
   }>
-  prompt(): Promise<void>
+  prompt: () => Promise<void>
 }
 
-export const usePWA = () => {
+export function usePWA () {
   const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
   const isInstallable = ref(false)
   const isInstalled = ref(false)
   const isOnline = ref(navigator.onLine)
 
   // Service Worker registration and update handling
-  const {
-    needRefresh,
-    updateServiceWorker,
-    offlineReady,
-  } = useRegisterSW({
-    onRegisteredSW(swUrl: string, registration: ServiceWorkerRegistration | undefined) {
+  const { needRefresh, updateServiceWorker, offlineReady } = useRegisterSW({
+    onRegisteredSW (
+      swUrl: string,
+      registration: ServiceWorkerRegistration | undefined,
+    ) {
       console.log('Service Worker registered:', swUrl)
-      
+
       // Check for updates periodically
       if (registration) {
         setInterval(() => {
           registration.update()
-        }, 60000) // Check every minute
+        }, 60_000) // Check every minute
       }
     },
-    onRegisterError(error: any) {
+    onRegisterError (error: any) {
       console.error('Service Worker registration error:', error)
     },
-    onOfflineReady() {
+    onOfflineReady () {
       console.log('App ready to work offline')
     },
-    onNeedRefresh() {
+    onNeedRefresh () {
       console.log('New content available, will refresh...')
     },
   })
 
   // Check if app is already installed
   const checkInstallStatus = () => {
-    if (window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone ||
-        document.referrer.includes('android-app://')) {
+    if (
+      window.matchMedia('(display-mode: standalone)').matches
+      || (window.navigator as any).standalone
+      || document.referrer.includes('android-app://')
+    ) {
       isInstalled.value = true
     }
   }
@@ -71,12 +72,14 @@ export const usePWA = () => {
 
   // Install the PWA
   const installPWA = async (): Promise<boolean> => {
-    if (!deferredPrompt.value) return false
+    if (!deferredPrompt.value) {
+      return false
+    }
 
     try {
       await deferredPrompt.value.prompt()
       const choiceResult = await deferredPrompt.value.userChoice
-      
+
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the install prompt')
         return true
@@ -114,12 +117,16 @@ export const usePWA = () => {
     text?: string
     url?: string
   }) => {
-    if (!canShare.value) return false
+    if (!canShare.value) {
+      return false
+    }
 
     try {
       await navigator.share({
         title: data?.title || 'Temperature Sensor Dashboard',
-        text: data?.text || 'Überwache Temperatur und Luftfeuchtigkeit in Echtzeit',
+        text:
+                    data?.text
+                    || 'Überwache Temperatur und Luftfeuchtigkeit in Echtzeit',
         url: data?.url || window.location.href,
       })
       return true

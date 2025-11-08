@@ -26,6 +26,7 @@ A senior-friendly web dashboard for monitoring temperature and humidity data fro
 ## 🏗️ Architecture
 
 ### Tech Stack
+
 - **Frontend**: Vue 3.5+ with Composition API
 - **UI Framework**: Vuetify 3.9+ with Material Design
 - **Charts**: Chart.js 4.3+ with vue-chartjs 5.1+
@@ -35,6 +36,7 @@ A senior-friendly web dashboard for monitoring temperature and humidity data fro
 - **Deployment**: GitHub Pages with automated CI/CD
 
 ### Project Structure
+
 ```
 automation-frontend/
 ├── src/
@@ -57,40 +59,46 @@ automation-frontend/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 20+ 
+
+- Node.js 20+
 - pnpm 9+ (recommended) or npm
 - Supabase account with `environment_measurements` table
 
 ### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd temperature-sensor/automation-frontend
-   ```
+
+    ```bash
+    git clone <repository-url>
+    cd temperature-sensor/automation-frontend
+    ```
 
 2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+
+    ```bash
+    pnpm install
+    ```
 
 3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your Supabase credentials:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` with your Supabase credentials:
+
+    ```env
+    VITE_SUPABASE_URL=your_supabase_project_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
 
 4. **Start development server**
-   ```bash
-   pnpm dev
-   ```
-   
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+    ```bash
+    pnpm dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Database Schema
 
@@ -118,6 +126,7 @@ FOR SELECT USING (true);
 ```
 
 ### Supported Locations
+
 - `garage` - Displays as "Garage"
 - `heating` - Displays as "Heizung"
 - Additional locations can be added to `locationDisplayNames` in `useSensorData.ts`
@@ -130,13 +139,15 @@ The repository includes GitHub Actions workflow for automatic deployment:
 
 1. **Configure GitHub Secrets**
    Go to your repository Settings → Secrets and variables → Actions, add:
-   - `VITE_SUPABASE_URL`: Your Supabase project URL
-   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+    - `VITE_SUPABASE_URL`: Your Supabase project URL
+    - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
 
 2. **Enable GitHub Pages**
-   - Go to repository Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: `gh-pages` / `/ (root)`
+
+    - Go to repository Settings → Pages
+    - Source: Deploy from a branch
+    - Branch: `gh-pages` / `/ (root)`
 
 3. **Deploy**
    Push to `main` branch triggers automatic deployment via GitHub Actions.
@@ -154,6 +165,7 @@ pnpm deploy
 ## 🎨 Senior-Friendly Design Features
 
 ### Visual Design
+
 - **Large Typography**: Minimum 18px body text, 24px+ for data values
 - **High Contrast**: 4.5:1+ contrast ratio for WCAG AA compliance
 - **Color Coding**: Temperature ranges with colorblind-safe palette
@@ -161,6 +173,7 @@ pnpm deploy
 - **Clear Hierarchy**: Logical information flow with proper heading structure
 
 ### Accessibility
+
 - **Screen Reader Support**: Semantic HTML with proper ARIA labels
 - **Keyboard Navigation**: Full keyboard accessibility with focus indicators
 - **Motion Sensitivity**: Respects `prefers-reduced-motion` settings
@@ -168,6 +181,7 @@ pnpm deploy
 - **Text Scaling**: Supports 200% zoom without horizontal scrolling
 
 ### User Experience
+
 - **German Language**: All labels and messages in clear German
 - **Auto Refresh**: Data updates every 30 seconds automatically
 - **Error Handling**: Clear error messages with retry options
@@ -178,17 +192,18 @@ pnpm deploy
 
 The dashboard uses color-coded temperature ranges:
 
-| Range | Temperature (°C) | Color | German Label | Background |
-|-------|------------------|-------|--------------|------------|
-| Cold | < 16°C | Blue (#1976D2) | Kalt | Light Blue |
-| Cool | 16-19°C | Light Blue (#0288D1) | Kühl | Very Light Blue |
-| Comfortable | 19-24°C | Green (#388E3C) | Angenehm | Light Green |
-| Warm | 24-27°C | Orange (#F57C00) | Warm | Light Orange |
-| Hot | > 27°C | Red (#D32F2F) | Heiß | Light Red |
+| Range       | Temperature (°C) | Color                | German Label | Background      |
+| ----------- | ---------------- | -------------------- | ------------ | --------------- |
+| Cold        | < 16°C           | Blue (#1976D2)       | Kalt         | Light Blue      |
+| Cool        | 16-19°C          | Light Blue (#0288D1) | Kühl         | Very Light Blue |
+| Comfortable | 19-24°C          | Green (#388E3C)      | Angenehm     | Light Green     |
+| Warm        | 24-27°C          | Orange (#F57C00)     | Warm         | Light Orange    |
+| Hot         | > 27°C           | Red (#D32F2F)        | Heiß         | Light Red       |
 
 ## 🚨 Alert System
 
 The dashboard shows alerts for:
+
 - **Temperature Extremes**: < 10°C or > 30°C (High severity)
 - **Sensor Offline**: No data for > 5 minutes (Medium severity)
 - **System Status**: Connection and loading issues
