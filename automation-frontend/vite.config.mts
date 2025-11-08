@@ -7,6 +7,7 @@ import Components from 'unplugin-vue-components/vite'
 import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
 // Utilities
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -15,6 +16,29 @@ import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  test: {
+    projects: [
+      {
+        // add "extends: true" to inherit the options from the root config
+        extends: true,
+        test: {
+          include: ['test/dom/*.test.{ts,js}'],
+          // it is recommended to define a name when using inline configs
+          name: 'happy-dom',
+          environment: 'happy-dom',
+        },
+      },
+      {
+        extends: true,
+        test: {
+          include: ['test/unit/*.test.{ts,js}'],
+          // color of the name label can be changed
+          name: { label: 'node', color: 'green' },
+          environment: 'node',
+        },
+      },
+    ],
+  },
   base:
         process.env.NODE_ENV === 'production'
           ? '/esp32-temperature-sensor/'
