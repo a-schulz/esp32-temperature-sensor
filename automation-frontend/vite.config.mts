@@ -17,6 +17,8 @@ import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 // https://vitejs.dev/config/
 export default defineConfig({
   test: {
+    globals: true,
+    setupFiles: ['test/setup.ts'],
     projects: [
       {
         // add "extends: true" to inherit the options from the root config
@@ -35,6 +37,14 @@ export default defineConfig({
           // color of the name label can be changed
           name: { label: 'node', color: 'green' },
           environment: 'node',
+        },
+      },
+      {
+        extends: true,
+        test: {
+          include: ['test/components/*.test.{ts,js}'],
+          name: { label: 'components', color: 'blue' },
+          environment: 'happy-dom',
         },
       },
     ],
